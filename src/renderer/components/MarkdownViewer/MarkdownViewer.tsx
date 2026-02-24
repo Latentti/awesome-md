@@ -5,11 +5,13 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { CodeBlock } from './CodeBlock';
 import { createImageRenderer } from './ImageRenderer';
+import { createLinkRenderer } from './LinkRenderer';
 import styles from './MarkdownViewer.module.css';
 
 interface MarkdownViewerProps {
   content: string;
   filePath?: string | null;
+  onNavigate?: (filePath: string) => void;
 }
 
 interface ErrorBoundaryState {
@@ -48,19 +50,18 @@ class MarkdownErrorBoundary extends Component<
 
 const REMARK_PLUGINS = [remarkGfm, remarkBreaks];
 const TRANSPARENT_BG = { backgroundColor: 'transparent' } as const;
-const CODE_ONLY_COMPONENTS = { code: CodeBlock } as const;
-
-export const MarkdownViewer = memo(({ content, filePath }: MarkdownViewerProps) => {
+export const MarkdownViewer = memo(({ content, filePath, onNavigate }: MarkdownViewerProps) => {
   const fileDir = filePath
     ? filePath.substring(0, filePath.lastIndexOf('/'))
     : undefined;
 
   const components = useMemo(
-    () =>
-      fileDir
-        ? { code: CodeBlock, img: createImageRenderer(fileDir) }
-        : CODE_ONLY_COMPONENTS,
-    [fileDir],
+    () => ({
+      code: CodeBlock,
+      ...(fileDir ? { img: createImageRenderer(fileDir) } : {}),
+      a: createLinkRenderer(fileDir, onNavigate),
+    }),
+    [fileDir, onNavigate],
   );
 
   return (

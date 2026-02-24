@@ -5,6 +5,12 @@ export const IPC_CHANNELS = {
   FILE_ADDED: 'fs:file-added',
   FILE_REMOVED: 'fs:file-removed',
   GET_CONFIG: 'app:get-config',
+  GET_SIDEBAR_WIDTH: 'app:get-sidebar-width',
+  SET_SIDEBAR_WIDTH: 'app:set-sidebar-width',
+  OPEN_EXTERNAL_LINK: 'shell:open-external-link',
+  SELECT_DIRECTORY: 'app:select-directory',
+  GET_ZOOM_LEVEL: 'app:get-zoom-level',
+  SET_ZOOM_LEVEL: 'app:set-zoom-level',
 } as const;
 
 export const DEFAULTS = {
@@ -15,4 +21,7 @@ export const DEFAULTS = {
   SIDEBAR_WIDTH: 240,
   SIDEBAR_MIN_WIDTH: 180,
   SIDEBAR_MAX_WIDTH: 400,
+  ZOOM_STEP: 0.5,
+  ZOOM_MIN: -3,
+  ZOOM_MAX: 3,
 } as const;

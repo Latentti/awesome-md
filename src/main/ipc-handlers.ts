@@ -1,11 +1,18 @@
-import { ipcMain } from 'electron';
+import { ipcMain, shell } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { IPC_CHANNELS } from '../shared/constants';
 import type { AppConfig, IpcResult, TreeNode } from '../shared/types';
 import { scanDirectory } from './directory-scanner';
 
-export const registerIpcHandlers = (config: AppConfig): void => {
+interface AppState {
+  getSidebarWidth: () => number;
+  setSidebarWidth: (width: number) => void;
+  getZoomLevel: () => number;
+  setZoomLevel: (level: number) => void;
+}
+
+export const registerIpcHandlers = (config: AppConfig, appState: AppState): void => {
   ipcMain.handle(IPC_CHANNELS.GET_CONFIG, () => config);
 
   ipcMain.handle(IPC_CHANNELS.READ_DIRECTORY, (): IpcResult<TreeNode[]> => {
@@ -32,6 +39,33 @@ export const registerIpcHandlers = (config: AppConfig): void => {
 
       const content = fs.readFileSync(resolved, 'utf-8');
       return { data: content };
+    } catch (err) {
+      return { data: null, error: (err as Error).message };
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.GET_SIDEBAR_WIDTH, () => appState.getSidebarWidth());
+
+  ipcMain.handle(IPC_CHANNELS.SET_SIDEBAR_WIDTH, (_, width: number) => {
+    appState.setSidebarWidth(width);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.GET_ZOOM_LEVEL, () => appState.getZoomLevel());
+
+  ipcMain.handle(IPC_CHANNELS.SET_ZOOM_LEVEL, (_, level: number) => {
+    appState.setZoomLevel(level);
+  });
+
+  const ALLOWED_PROTOCOLS = ['http:', 'https:', 'mailto:'];
+
+  ipcMain.handle(IPC_CHANNELS.OPEN_EXTERNAL_LINK, async (_, url: string): Promise<IpcResult<null>> => {
+    try {
+      const parsed = new URL(url);
+      if (!ALLOWED_PROTOCOLS.includes(parsed.protocol)) {
+        return { data: null, error: `Blocked protocol: ${parsed.protocol}` };
+      }
+      await shell.openExternal(url);
+      return { data: null };
     } catch (err) {
       return { data: null, error: (err as Error).message };
     }

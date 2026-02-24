@@ -6,7 +6,7 @@ export type { AppConfig };
 export const parseCliArgs = (): AppConfig => {
   const argv = process.argv;
 
-  let directory = process.cwd();
+  let directory = '';
   let title: string | undefined;
 
   // Parse --dir and --title from process.argv
@@ -21,13 +21,15 @@ export const parseCliArgs = (): AppConfig => {
     }
   }
 
-  // Resolve to absolute path
-  directory = path.resolve(directory);
+  if (directory) {
+    // Resolve to absolute path
+    directory = path.resolve(directory);
 
-  // Default title to directory basename
-  if (!title) {
-    title = path.basename(directory);
+    // Default title to directory basename
+    if (!title) {
+      title = path.basename(directory);
+    }
   }
 
-  return { directory, title };
+  return { directory, title: title ?? '' };
 };
