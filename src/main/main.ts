@@ -4,6 +4,7 @@ import { DEFAULTS } from '../shared/constants';
 import { parseCliArgs } from './cli-args';
 import type { AppConfig } from './cli-args';
 import { registerIpcHandlers } from './ipc-handlers';
+import { startFileWatcher } from './file-watcher';
 
 // Must be called before app.ready — registers custom protocol for serving local images
 protocol.registerSchemesAsPrivileged([
@@ -19,8 +20,9 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let appConfig: AppConfig;
+let fileWatcher: ReturnType<typeof startFileWatcher> | null = null;
 
-const createWindow = () => {
+const createWindow = (): BrowserWindow => {
   const mainWindow = new BrowserWindow({
     width: DEFAULTS.WINDOW_WIDTH,
     height: DEFAULTS.WINDOW_HEIGHT,
@@ -43,6 +45,8 @@ const createWindow = () => {
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
     );
   }
+
+  return mainWindow;
 };
 
 app.on('ready', () => {
@@ -61,6 +65,11 @@ app.on('ready', () => {
   registerIpcHandlers(appConfig);
 
   createWindow();
+  fileWatcher = startFileWatcher(appConfig.directory);
+});
+
+app.on('before-quit', () => {
+  fileWatcher?.close();
 });
 
 app.on('window-all-closed', () => {
