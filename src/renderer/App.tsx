@@ -3,6 +3,7 @@ import { DEFAULTS } from '../shared/constants';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { FileTree } from './components/FileTree/FileTree';
 import { MarkdownViewer } from './components/MarkdownViewer/MarkdownViewer';
+import { RefreshIndicator } from './components/RefreshIndicator/RefreshIndicator';
 import styles from './App.module.css';
 
 export const App = () => {
@@ -11,8 +12,10 @@ export const App = () => {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const isResizing = useRef(false);
   const contentRef = useRef<HTMLElement>(null);
+  const isAutoRefreshRef = useRef(false);
 
   const toggleSidebar = useCallback(() => setIsCollapsed(prev => !prev), []);
 
@@ -71,10 +74,62 @@ export const App = () => {
         setFileError('Failed to read file');
         setFileContent(null);
       }
-      contentRef.current?.scrollTo(0, 0);
+      if (!isAutoRefreshRef.current) {
+        contentRef.current?.scrollTo(0, 0);
+      }
     };
     loadFile();
     return () => { cancelled = true; };
+  }, [selectedFile]);
+
+  useEffect(() => {
+    if (!selectedFile) return;
+
+    let cancelled = false;
+    let refreshTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const cleanup = window.electronAPI.onFileChanged((changedFilePath: string) => {
+      if (changedFilePath !== selectedFile) return;
+
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+        refreshTimeout = null;
+      }
+
+      isAutoRefreshRef.current = true;
+      setIsRefreshing(true);
+
+      const reloadFile = async () => {
+        try {
+          const result = await window.electronAPI.readFile(selectedFile);
+          if (cancelled) return;
+          if (result.error) {
+            setFileError(result.error);
+            setFileContent(null);
+          } else {
+            setFileContent(result.data);
+            setFileError(null);
+          }
+        } catch (err) {
+          if (cancelled) return;
+          setFileError('Failed to read file');
+          setFileContent(null);
+        }
+        if (cancelled) return;
+        refreshTimeout = setTimeout(() => {
+          if (cancelled) return;
+          setIsRefreshing(false);
+          isAutoRefreshRef.current = false;
+        }, 300);
+      };
+      reloadFile();
+    });
+
+    return () => {
+      cancelled = true;
+      if (refreshTimeout) clearTimeout(refreshTimeout);
+      cleanup();
+    };
   }, [selectedFile]);
 
   const handleTreeLoaded = useCallback((firstFilePath: string | null) => {
@@ -109,6 +164,7 @@ export const App = () => {
         </>
       )}
       <main className={styles.content} ref={contentRef}>
+        <RefreshIndicator isRefreshing={isRefreshing} />
         {isCollapsed && (
           <button className={styles.expandButton} onClick={toggleSidebar} title="Show sidebar">
             ›

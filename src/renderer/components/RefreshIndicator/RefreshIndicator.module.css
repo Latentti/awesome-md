@@ -1,0 +1,24 @@
+@keyframes refreshPulse {
+  0% { opacity: 0; }
+  50% { opacity: 0.1; }
+  100% { opacity: 0; }
+}
+
+.indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--info);
+  animation: refreshPulse 300ms ease-in-out;
+  z-index: 5;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicator {
+    animation: none;
+    opacity: 0.1;
+  }
+}
