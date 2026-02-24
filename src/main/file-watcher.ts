@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { BrowserWindow } from 'electron';
 import { watch } from 'chokidar';
 import { IPC_CHANNELS } from '../shared/constants';
@@ -6,7 +7,7 @@ const SKIP_DIRS = new Set(['node_modules', '.git']);
 const DEBOUNCE_MS = 100;
 
 const ignored = (filePath: string, stats?: { isFile?: () => boolean }): boolean => {
-  const name = filePath.slice(filePath.lastIndexOf('/') + 1);
+  const name = path.basename(filePath);
   if (SKIP_DIRS.has(name)) return true;
   if (!stats?.isFile?.()) return false;
   return !name.toLowerCase().endsWith('.md');

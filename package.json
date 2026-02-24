@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@uiw/react-markdown-preview": "^5.1.5",
-    "chokidar": "^4.0.3",
+    "chokidar": "4.0.3",
     "commander": "^14.0.3",
     "mermaid": "^11.12.3",
     "react": "^19.0.0",
