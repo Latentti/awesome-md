@@ -49,6 +49,7 @@
     "mermaid": "^11.12.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "vega": "^6.2.0",
     "vega-embed": "^7.1.0",

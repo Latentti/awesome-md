@@ -36,23 +36,24 @@
 }
 
 .expandButton {
-  position: absolute;
+  position: sticky;
   top: var(--space-sm);
   left: var(--space-sm);
-  background: transparent;
-  border: none;
+  float: left;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
-  padding: 2px 6px;
+  padding: 4px 8px;
   color: var(--text-secondary);
-  border-radius: 4px;
-  z-index: 1;
+  border-radius: 6px;
+  z-index: 10;
 }
 
 .expandButton:hover {
   color: var(--text-primary);
-  background: var(--code-bg);
+  background: var(--bg-sidebar);
 }
 
 .contentInner {

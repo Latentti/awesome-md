@@ -15,7 +15,7 @@ export const FileTreeItem = ({
   onSelectFile,
   depth,
 }: FileTreeItemProps) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleToggle = useCallback(() => {
     setIsExpanded((prev) => !prev);

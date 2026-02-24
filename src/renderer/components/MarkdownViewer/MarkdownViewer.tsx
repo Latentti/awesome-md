@@ -2,6 +2,7 @@ import { Component, memo, useMemo } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import MarkdownPreview from '@uiw/react-markdown-preview';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { CodeBlock } from './CodeBlock';
 import { createImageRenderer } from './ImageRenderer';
 import styles from './MarkdownViewer.module.css';
@@ -45,7 +46,7 @@ class MarkdownErrorBoundary extends Component<
   }
 }
 
-const REMARK_PLUGINS = [remarkGfm];
+const REMARK_PLUGINS = [remarkGfm, remarkBreaks];
 const TRANSPARENT_BG = { backgroundColor: 'transparent' } as const;
 const CODE_ONLY_COMPONENTS = { code: CodeBlock } as const;
 
