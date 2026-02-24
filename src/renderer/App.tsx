@@ -107,7 +107,7 @@ export const App = () => {
           const result = await window.electronAPI.readFile(selectedFile);
           if (cancelled) return;
           if (result.error) {
-            setFileError(result.error);
+            setFileError((prev) => prev === 'File no longer available' ? prev : result.error);
             setFileContent(null);
           } else {
             setFileContent(result.data);
@@ -115,7 +115,7 @@ export const App = () => {
           }
         } catch (err) {
           if (cancelled) return;
-          setFileError('Failed to read file');
+          setFileError((prev) => prev === 'File no longer available' ? prev : 'Failed to read file');
           setFileContent(null);
         }
         if (cancelled) return;
@@ -133,6 +133,19 @@ export const App = () => {
       if (refreshTimeout) clearTimeout(refreshTimeout);
       cleanup();
     };
+  }, [selectedFile]);
+
+  useEffect(() => {
+    if (!selectedFile) return;
+
+    const cleanup = window.electronAPI.onFileRemoved((removedPath: string) => {
+      if (removedPath === selectedFile) {
+        setFileContent(null);
+        setFileError('File no longer available');
+      }
+    });
+
+    return cleanup;
   }, [selectedFile]);
 
   useLayoutEffect(() => {

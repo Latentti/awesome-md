@@ -49,6 +49,37 @@ export const FileTree = ({ selectedPath, onSelectFile, onTreeLoaded }: FileTreeP
     loadTree();
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const refreshTree = async () => {
+      try {
+        const result = await window.electronAPI.readDirectory();
+        if (cancelled) return;
+        if (result.data) {
+          setError(null);
+          setTree(result.data);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to refresh tree:', err);
+      }
+    };
+
+    const cleanupAdded = window.electronAPI.onFileAdded(() => {
+      refreshTree();
+    });
+    const cleanupRemoved = window.electronAPI.onFileRemoved(() => {
+      refreshTree();
+    });
+
+    return () => {
+      cancelled = true;
+      cleanupAdded();
+      cleanupRemoved();
+    };
+  }, []);
+
   if (!loaded) {
     return null;
   }
