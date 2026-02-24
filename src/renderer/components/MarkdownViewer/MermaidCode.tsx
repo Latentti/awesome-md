@@ -5,7 +5,14 @@ import { getCodeString } from 'rehype-rewrite';
 import type { Element } from 'hast';
 import styles from './MarkdownViewer.module.css';
 
-mermaid.initialize({ startOnLoad: false, theme: 'default' });
+const getMermaidTheme = () =>
+  window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default';
+
+mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme() });
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme() });
+});
 
 const randomId = () =>
   `mermaid-${parseInt(String(Math.random() * 1e15), 10).toString(36)}`;
