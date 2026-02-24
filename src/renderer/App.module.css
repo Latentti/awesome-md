@@ -1,0 +1,71 @@
+.app {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+}
+
+.divider {
+  width: 1px;
+  flex-shrink: 0;
+  background: var(--border);
+  cursor: col-resize;
+  position: relative;
+}
+
+.divider:hover {
+  background: var(--info);
+  width: 3px;
+  margin-left: -1px;
+}
+
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  width: 7px;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-content);
+  position: relative;
+}
+
+.expandButton {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.expandButton:hover {
+  color: var(--text-primary);
+  background: var(--code-bg);
+}
+
+.contentInner {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--content-padding);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+}

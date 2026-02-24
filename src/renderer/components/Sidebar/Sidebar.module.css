@@ -1,0 +1,30 @@
+.sidebar {
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: var(--font-size-ui);
+  padding: var(--space-sm);
+  height: 100%;
+  position: relative;
+}
+
+.collapseButton {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.collapseButton:hover {
+  color: var(--text-primary);
+  background: var(--code-bg);
+}

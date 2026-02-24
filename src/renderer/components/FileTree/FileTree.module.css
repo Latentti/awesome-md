@@ -1,0 +1,74 @@
+.tree {
+  padding: var(--space-xs) 0;
+}
+
+.treeItem {
+  display: flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-sm);
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: var(--font-size-ui);
+  user-select: none;
+  color: var(--text-primary);
+}
+
+.treeItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  .treeItem:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.selected {
+  background: var(--info);
+  color: #FFFFFF;
+}
+
+.selected:hover {
+  background: var(--info);
+}
+
+.disclosure {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
+  margin-right: var(--space-xs);
+  font-size: 14px;
+}
+
+.folderName {
+  font-weight: 500;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileName {
+  font-weight: 400;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emptyState {
+  color: var(--text-secondary);
+  padding: var(--space-md);
+  font-size: var(--font-size-ui);
+}
