@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { DEFAULTS } from '../shared/constants';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { FileTree } from './components/FileTree/FileTree';
@@ -16,6 +16,7 @@ export const App = () => {
   const isResizing = useRef(false);
   const contentRef = useRef<HTMLElement>(null);
   const isAutoRefreshRef = useRef(false);
+  const savedScrollTopRef = useRef(0);
 
   const toggleSidebar = useCallback(() => setIsCollapsed(prev => !prev), []);
 
@@ -57,6 +58,7 @@ export const App = () => {
       setFileError(null);
       return;
     }
+    savedScrollTopRef.current = 0;
     let cancelled = false;
     const loadFile = async () => {
       try {
@@ -97,6 +99,7 @@ export const App = () => {
       }
 
       isAutoRefreshRef.current = true;
+      savedScrollTopRef.current = contentRef.current?.scrollTop ?? 0;
       setIsRefreshing(true);
 
       const reloadFile = async () => {
@@ -131,6 +134,15 @@ export const App = () => {
       cleanup();
     };
   }, [selectedFile]);
+
+  useLayoutEffect(() => {
+    if (!isAutoRefreshRef.current) return;
+    const el = contentRef.current;
+    if (el) {
+      const maxScroll = el.scrollHeight - el.clientHeight;
+      el.scrollTop = Math.min(savedScrollTopRef.current, Math.max(0, maxScroll));
+    }
+  }, [fileContent]);
 
   const handleTreeLoaded = useCallback((firstFilePath: string | null) => {
     setSelectedFile((current) => current ?? firstFilePath);
