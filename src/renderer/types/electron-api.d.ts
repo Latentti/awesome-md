@@ -21,6 +21,7 @@ export interface ElectronAPI {
   getAllWindows(): Promise<IpcResult<WindowInfo[]>>;
   activateWindow(id: number): Promise<IpcResult<null>>;
   openNewWindow(dirPath: string): Promise<IpcResult<null>>;
+  closeWindow(id: number): Promise<IpcResult<null>>;
   setCurrentFile(filePath: string | null): Promise<void>;
 }
 

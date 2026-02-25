@@ -16,9 +16,10 @@ interface ProjectSwitcherProps {
   onClose: () => void;
   onActivateWindow: (id: number) => void;
   onOpenNewWindow: (dir: string) => void;
+  onCloseWindow: (id: number) => void;
 }
 
-export const ProjectSwitcher = ({ onClose, onActivateWindow, onOpenNewWindow }: ProjectSwitcherProps) => {
+export const ProjectSwitcher = ({ onClose, onActivateWindow, onOpenNewWindow, onCloseWindow }: ProjectSwitcherProps) => {
   const [windows, setWindows] = useState<WindowInfo[]>([]);
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState(0);
@@ -134,6 +135,12 @@ export const ProjectSwitcher = ({ onClose, onActivateWindow, onOpenNewWindow }: 
     onOpenNewWindow(filePath);
   }, [onOpenNewWindow]);
 
+  const handleCloseWindow = useCallback((id: number) => {
+    onCloseWindow(id);
+    setWindows(prev => prev.filter(w => w.id !== id));
+    setSelected(prev => Math.max(0, prev - 1));
+  }, [onCloseWindow]);
+
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -180,6 +187,7 @@ export const ProjectSwitcher = ({ onClose, onActivateWindow, onOpenNewWindow }: 
                 isSelected={i === selected}
                 filter={filter}
                 onClick={() => onActivateWindow(win.id)}
+                onClose={win.isCurrent ? undefined : () => handleCloseWindow(win.id)}
               />
             ))}
           </div>

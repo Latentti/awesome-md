@@ -35,5 +35,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAllWindows: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOWS_GET_ALL),
   activateWindow: (id: number) => ipcRenderer.invoke(IPC_CHANNELS.WINDOWS_ACTIVATE, id),
   openNewWindow: (dirPath: string) => ipcRenderer.invoke(IPC_CHANNELS.WINDOWS_OPEN_NEW, dirPath),
+  closeWindow: (id: number) => ipcRenderer.invoke(IPC_CHANNELS.WINDOWS_CLOSE, id),
   setCurrentFile: (filePath: string | null) => ipcRenderer.invoke(IPC_CHANNELS.SET_CURRENT_FILE, filePath),
 });

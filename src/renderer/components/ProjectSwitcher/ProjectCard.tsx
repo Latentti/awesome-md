@@ -6,6 +6,7 @@ interface ProjectCardProps {
   isSelected: boolean;
   filter: string;
   onClick: () => void;
+  onClose?: () => void;
 }
 
 const HighlightText = ({ text, query }: { text: string; query: string }) => {
@@ -35,7 +36,7 @@ const fileName = (filePath: string | null): string | null => {
   return filePath.split('/').pop() ?? null;
 };
 
-export const ProjectCard = ({ window: win, isSelected, filter, onClick }: ProjectCardProps) => {
+export const ProjectCard = ({ window: win, isSelected, filter, onClick, onClose }: ProjectCardProps) => {
   const cardClass = [
     styles.card,
     isSelected && styles.cardSelected,
@@ -44,6 +45,15 @@ export const ProjectCard = ({ window: win, isSelected, filter, onClick }: Projec
 
   return (
     <button className={cardClass} onClick={onClick} type="button">
+      {onClose && (
+        <span
+          className={styles.closeButton}
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          title="Close window"
+        >
+          ×
+        </span>
+      )}
       <div className={styles.cardTitle}>
         <HighlightText text={win.title} query={filter} />
         {win.isCurrent && <span className={styles.currentBadge}>Current</span>}

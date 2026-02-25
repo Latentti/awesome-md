@@ -356,6 +356,9 @@ export const App = () => {
               setShowProjectSwitcher(false);
             }
           }}
+          onCloseWindow={(id) => {
+            window.electronAPI.closeWindow(id);
+          }}
         />
       )}
     </div>

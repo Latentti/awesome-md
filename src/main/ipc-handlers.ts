@@ -184,6 +184,15 @@ export const registerIpcHandlers = (windowManager: WindowManager): void => {
     }
   });
 
+  ipcMain.handle(IPC_CHANNELS.WINDOWS_CLOSE, (_, webContentsId: number): IpcResult<null> => {
+    const ctx = windowManager.getByWebContentsId(webContentsId);
+    if (!ctx) return { data: null, error: 'Window not found' };
+    if (!ctx.window.isDestroyed()) {
+      ctx.window.close();
+    }
+    return { data: null };
+  });
+
   ipcMain.handle(IPC_CHANNELS.SET_CURRENT_FILE, (event, filePath: string | null) => {
     const ctx = windowManager.getByWebContentsId(event.sender.id);
     if (!ctx) return;
