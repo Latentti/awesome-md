@@ -11,6 +11,9 @@ awesome-md is a lightweight desktop app that renders Markdown files with full su
 - **Vega-Lite charts** — interactive data visualizations from JSON specs in fenced code blocks
 - **Live auto-refresh** — file changes are detected via native macOS FSEvents and reflected instantly with scroll position preserved
 - **File tree navigation** — recursive sidebar with expand/collapse, auto-updates when files are added or removed
+- **Multi-window** — each CLI invocation opens a new window in a single Electron process, each with independent file watcher and state
+- **Terminal bridge** — click the terminal button to jump back to the terminal that launched the viewer
+- **Project Switcher** — `Cmd+Shift+P` opens an overlay showing all open projects with instant filtering and keyboard navigation
 - **Drag-and-drop** — drop a folder onto the window to switch directories without restarting
 - **Image support** — renders local (relative path) and remote (HTTP/HTTPS) images
 - **Internal link navigation** — click `[link](./other.md)` to navigate between files within the viewer
@@ -22,14 +25,27 @@ awesome-md is a lightweight desktop app that renders Markdown files with full su
 
 ## Installation
 
+### Homebrew
+
+```bash
+brew tap Latentti/awesome-md
+brew install --cask awesome-md
+```
+
 ### From DMG
 
-Download the latest `.dmg` from [Releases](https://github.com/AriHietamaki/awesome-md/releases), open it, and drag `awesome-md.app` to your Applications folder.
+Download the latest `.dmg` from [Releases](https://github.com/Latentti/awesome-md/releases), open it, and drag `awesome-md.app` to your Applications folder.
+
+> **Note:** awesome-md is not currently code-signed. On first launch, macOS Gatekeeper may block the app. To allow it:
+> ```bash
+> xattr -d com.apple.quarantine /Applications/awesome-md.app
+> ```
+> Or right-click the app in Finder and select "Open".
 
 ### From source
 
 ```bash
-git clone https://github.com/AriHietamaki/awesome-md.git
+git clone https://github.com/Latentti/awesome-md.git
 cd awesome-md
 npm install
 npm start
@@ -65,9 +81,11 @@ awesome-md ~/projects/api-docs --title "API Documentation"
 
 | Shortcut | Action |
 |---|---|
+| `Cmd` + `Shift` + `P` | Open Project Switcher |
 | `Cmd` + `=` | Zoom in |
 | `Cmd` + `-` | Zoom out |
 | `Cmd` + `0` | Reset zoom |
+| `Cmd` + `W` | Close current window |
 
 ## Supported code blocks
 
@@ -116,7 +134,9 @@ awesome-md follows Electron's three-process architecture with strict security bo
 ┌─────────────────────────────────────────────────────┐
 │  Main Process (Node.js)                             │
 │  ├── CLI argument parsing                           │
+│  ├── Window manager (multi-window lifecycle)        │
 │  ├── File system operations (read, scan, watch)     │
+│  ├── Terminal bridge (osascript activation)          │
 │  ├── Window state persistence                       │
 │  └── IPC request handlers                           │
 ├─────────────────────────────────────────────────────┤
@@ -129,6 +149,8 @@ awesome-md follows Electron's three-process architecture with strict security bo
 │  │   ├── CodeBlock → MermaidCode / VegaCode         │
 │  │   ├── ImageRenderer (local-file:// protocol)     │
 │  │   └── LinkRenderer (internal / external)         │
+│  ├── ProjectSwitcher — multi-window overlay         │
+│  ├── TerminalBridgeButton — terminal activation     │
 │  ├── DropZone — drag-and-drop folder selection      │
 │  └── RefreshIndicator — auto-refresh feedback       │
 └─────────────────────────────────────────────────────┘
@@ -144,7 +166,7 @@ awesome-md follows Electron's three-process architecture with strict security bo
 
 | Layer | Technology | Version |
 |---|---|---|
-| Runtime | Electron | 40 |
+| Runtime | Electron | 39 |
 | UI | React | 19 |
 | Language | TypeScript | 5.9 |
 | Bundler | Vite | 5.4 |
@@ -159,7 +181,7 @@ awesome-md follows Electron's three-process architecture with strict security bo
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - npm 10+
 - macOS 13 (Ventura) or later
 
@@ -177,11 +199,13 @@ npm run make       # Build universal DMG for distribution
 ```
 src/
 ├── main/                    # Main process (Node.js)
-│   ├── main.ts              # Window creation, IPC setup
+│   ├── main.ts              # App lifecycle, IPC setup
 │   ├── cli-args.ts          # --dir / --title parsing
 │   ├── directory-scanner.ts # Recursive .md file discovery
 │   ├── file-watcher.ts      # chokidar file watching
 │   ├── ipc-handlers.ts      # IPC channel handlers
+│   ├── terminal-bridge.ts   # macOS terminal activation
+│   ├── window-manager.ts    # Multi-window lifecycle
 │   └── window-state.ts      # Position/size/zoom persistence
 ├── preload/
 │   └── preload.ts           # contextBridge API
@@ -192,6 +216,8 @@ src/
 │       ├── Sidebar/         # Collapsible sidebar container
 │       ├── FileTree/        # Directory tree with expand/collapse
 │       ├── MarkdownViewer/  # Rendering engine
+│       ├── ProjectSwitcher/ # Multi-window project overlay
+│       ├── TerminalBridgeButton/
 │       ├── DropZone/        # Drag-and-drop folder selection
 │       └── RefreshIndicator/
 └── shared/
@@ -199,13 +225,17 @@ src/
     └── types.ts             # Shared interfaces
 ```
 
-## Building for distribution
+## Releasing
+
+Pushing a version tag triggers an automated release via GitHub Actions:
 
 ```bash
-npm run make
+# Update version in package.json, then:
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
-This produces a universal (x64 + arm64) DMG at `out/make/awesome-md-<version>-universal.dmg`. The app is ad-hoc signed, which is sufficient for local distribution. Apple Developer ID signing is required for public distribution via notarization.
+The workflow builds a universal DMG, creates a GitHub Release with the DMG attached, and updates the Homebrew cask.
 
 ## License
 
