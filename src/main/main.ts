@@ -18,13 +18,16 @@ protocol.registerSchemesAsPrivileged([
 
 const windowManager = new WindowManager();
 
-const gotLock = app.requestSingleInstanceLock();
+// Pass raw argv via additionalData — Chromium rearranges the argv array
+// in second-instance events, separating flags from their values.
+const gotLock = app.requestSingleInstanceLock({ rawArgv: process.argv });
 
 if (!gotLock) {
   app.quit();
 } else {
-  app.on('second-instance', (_event, argv) => {
-    const args = parseCliArgs(argv);
+  app.on('second-instance', (_event, _argv, _workingDir, additionalData) => {
+    const rawArgv = (additionalData as { rawArgv?: string[] })?.rawArgv;
+    const args = parseCliArgs(rawArgv ?? []);
     if (args.directory) {
       const win = windowManager.create({
         directory: args.directory,
@@ -38,6 +41,12 @@ if (!gotLock) {
   });
 
   app.on('ready', () => {
+    app.setAboutPanelOptions({
+      applicationName: 'awesome-md',
+      applicationVersion: app.getVersion(),
+      copyright: 'Latentti Oy — Ari Hietamäki',
+    });
+
     const appConfig = parseCliArgs();
 
     protocol.handle('local-file', async (request) => {

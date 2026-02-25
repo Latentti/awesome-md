@@ -51,10 +51,6 @@ export class WindowManager {
 
     const win = new BrowserWindow(windowOptions);
 
-    if (args.title) {
-      win.setTitle(args.title);
-    }
-
     const watcher = args.directory ? startFileWatcher(args.directory, win) : null;
 
     const ctx: WindowContext = {
@@ -93,6 +89,13 @@ export class WindowManager {
       win.loadFile(
         path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
       );
+    }
+
+    // Set title after page load — HTML <title> overrides any earlier setTitle call
+    if (args.title) {
+      win.webContents.on('did-finish-load', () => {
+        win.setTitle(args.title);
+      });
     }
 
     return win;
