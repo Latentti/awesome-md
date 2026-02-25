@@ -1,8 +1,6 @@
 import path from 'node:path';
 import type { AppConfig } from '../shared/types';
 
-export type { AppConfig };
-
 export const parseCliArgs = (): AppConfig => {
   const argv = process.argv;
 
@@ -31,5 +29,5 @@ export const parseCliArgs = (): AppConfig => {
     }
   }
 
-  return { directory, title: title ?? '' };
+  return { directory, title: title ?? '', terminalPid: null, terminalBundleId: null };
 };

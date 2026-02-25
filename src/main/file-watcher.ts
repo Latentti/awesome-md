@@ -13,15 +13,13 @@ const ignored = (filePath: string, stats?: { isFile?: () => boolean }): boolean 
   return !name.toLowerCase().endsWith('.md');
 };
 
-const sendToRenderer = (channel: string, filePath: string): void => {
-  for (const win of BrowserWindow.getAllWindows()) {
-    if (!win.isDestroyed()) {
-      win.webContents.send(channel, filePath);
-    }
+const sendToWindow = (win: BrowserWindow, channel: string, filePath: string): void => {
+  if (!win.isDestroyed()) {
+    win.webContents.send(channel, filePath);
   }
 };
 
-export const startFileWatcher = (directory: string) => {
+export const startFileWatcher = (directory: string, targetWindow: BrowserWindow) => {
   const debounceTimers = new Map<string, NodeJS.Timeout>();
 
   const watcher = watch(directory, {
@@ -38,13 +36,13 @@ export const startFileWatcher = (directory: string) => {
       filePath,
       setTimeout(() => {
         debounceTimers.delete(filePath);
-        sendToRenderer(IPC_CHANNELS.FILE_CHANGED, filePath);
+        sendToWindow(targetWindow, IPC_CHANNELS.FILE_CHANGED, filePath);
       }, DEBOUNCE_MS),
     );
   });
 
   watcher.on('add', (filePath: string) => {
-    sendToRenderer(IPC_CHANNELS.FILE_ADDED, filePath);
+    sendToWindow(targetWindow, IPC_CHANNELS.FILE_ADDED, filePath);
   });
 
   watcher.on('unlink', (filePath: string) => {
@@ -53,10 +51,10 @@ export const startFileWatcher = (directory: string) => {
       clearTimeout(existing);
       debounceTimers.delete(filePath);
     }
-    sendToRenderer(IPC_CHANNELS.FILE_REMOVED, filePath);
+    sendToWindow(targetWindow, IPC_CHANNELS.FILE_REMOVED, filePath);
   });
 
-  watcher.on('error', (error: Error) => {
+  watcher.on('error', (error: unknown) => {
     console.error('File watcher error:', error);
   });
 
