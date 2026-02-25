@@ -5,6 +5,7 @@ import { FileTree } from './components/FileTree/FileTree';
 import { MarkdownViewer } from './components/MarkdownViewer/MarkdownViewer';
 import { RefreshIndicator } from './components/RefreshIndicator/RefreshIndicator';
 import { DropZone } from './components/DropZone/DropZone';
+import { TerminalBridgeButton } from './components/TerminalBridgeButton/TerminalBridgeButton';
 import type { AppConfig } from './types/electron-api';
 import styles from './App.module.css';
 
@@ -20,8 +21,12 @@ export const App = () => {
   const contentRef = useRef<HTMLElement>(null);
   const isAutoRefreshRef = useRef(false);
   const savedScrollTopRef = useRef(0);
+  const configRef = useRef<AppConfig | null>(null);
 
   const sidebarWidthRef = useRef(DEFAULTS.SIDEBAR_WIDTH);
+
+  // Keep a mutable ref in sync with config so keydown handler ([] deps) can read it
+  useEffect(() => { configRef.current = config; }, [config]);
 
   const toggleSidebar = useCallback(() => setIsCollapsed(prev => !prev), []);
 
@@ -67,10 +72,20 @@ export const App = () => {
     return () => { cancelled = true; };
   }, [config?.directory]);
 
-  // Zoom keyboard shortcuts: Cmd+Plus, Cmd+Minus, Cmd+0
+  // Keyboard shortcuts: Cmd+T (terminal), Cmd+Plus/Minus/0 (zoom)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!e.metaKey && !e.ctrlKey) return;
+
+      // Cmd+T: activate terminal (only when a directory with terminal PID is active)
+      if (e.key === 't') {
+        const cfg = configRef.current;
+        if (cfg?.terminalPid != null && cfg?.directory) {
+          e.preventDefault();
+          window.electronAPI.activateTerminal();
+        }
+        return;
+      }
 
       let delta: number | null = null;
 
@@ -275,7 +290,13 @@ export const App = () => {
     <div className={styles.app}>
       {!isCollapsed && (
         <>
-          <Sidebar width={sidebarWidth} onCollapse={toggleSidebar}>
+          <Sidebar
+            width={sidebarWidth}
+            onCollapse={toggleSidebar}
+            footer={config.terminalPid != null ? (
+              <TerminalBridgeButton directory={config.directory} />
+            ) : undefined}
+          >
             <FileTree
               selectedPath={selectedFile}
               onSelectFile={setSelectedFile}
@@ -294,6 +315,11 @@ export const App = () => {
           <button className={styles.expandButton} onClick={toggleSidebar} title="Show sidebar">
             ›
           </button>
+        )}
+        {isCollapsed && config.terminalPid != null && (
+          <div className={styles.collapsedTerminal}>
+            <TerminalBridgeButton directory={config.directory} collapsed />
+          </div>
         )}
         <div className={styles.contentInner}>
           {renderContent()}

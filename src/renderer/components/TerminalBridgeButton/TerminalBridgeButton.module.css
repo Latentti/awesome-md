@@ -1,0 +1,34 @@
+.button {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-family: var(--font-ui);
+  line-height: 36px;
+}
+
+.button:hover {
+  background: var(--code-bg);
+  color: var(--text-primary);
+}
+
+.collapsedButton {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px 8px;
+  color: var(--text-secondary);
+  border-radius: 6px;
+}
+
+.collapsedButton:hover {
+  color: var(--text-primary);
+  background: var(--bg-sidebar);
+}

@@ -4,10 +4,11 @@ import styles from './Sidebar.module.css';
 interface SidebarProps {
   width: number;
   onCollapse?: () => void;
+  footer?: ReactNode;
   children?: ReactNode;
 }
 
-export const Sidebar = ({ width, onCollapse, children }: SidebarProps) => {
+export const Sidebar = ({ width, onCollapse, footer, children }: SidebarProps) => {
   return (
     <aside className={styles.sidebar} style={{ width }}>
       {onCollapse && (
@@ -15,7 +16,10 @@ export const Sidebar = ({ width, onCollapse, children }: SidebarProps) => {
           ‹
         </button>
       )}
-      {children}
+      <div className={styles.sidebarContent}>
+        {children}
+      </div>
+      {footer && <div className={styles.sidebarFooter}>{footer}</div>}
     </aside>
   );
 };

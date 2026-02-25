@@ -1,12 +1,24 @@
 .sidebar {
   flex-shrink: 0;
   background: var(--bg-sidebar);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   font-size: var(--font-size-ui);
-  padding: var(--space-sm);
   height: 100%;
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarContent {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-sm);
+}
+
+.sidebarFooter {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
 }
 
 .collapseButton {

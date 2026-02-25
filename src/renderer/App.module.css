@@ -62,6 +62,13 @@
   padding: var(--content-padding);
 }
 
+.collapsedTerminal {
+  position: fixed;
+  bottom: var(--space-sm);
+  left: var(--space-sm);
+  z-index: 10;
+}
+
 .emptyState {
   display: flex;
   align-items: center;
