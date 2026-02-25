@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build universal DMG
+        run: npm run make
+
+      - name: Identify DMG and compute SHA256
+        id: dmg
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          DMG_NAME="awesome-md-${VERSION}-universal.dmg"
+          DMG_PATH="out/make/${DMG_NAME}"
+
+          if [ ! -f "$DMG_PATH" ]; then
+            echo "::error::DMG not found at ${DMG_PATH}"
+            ls -la out/make/
+            exit 1
+          fi
+
+          SHA256=$(shasum -a 256 "$DMG_PATH" | awk '{ print $1 }')
+
+          echo "dmg_path=${DMG_PATH}" >> "$GITHUB_OUTPUT"
+          echo "dmg_name=${DMG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "sha256=${SHA256}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            ### Homebrew
+            ```bash
+            brew tap Latentti/awesome-md
+            brew install --cask awesome-md
+            ```
+
+            ### Manual Download
+            Download `${{ steps.dmg.outputs.dmg_name }}` below.
+
+            ## Verify (SHA256)
+            ```
+            ${{ steps.dmg.outputs.sha256 }}  ${{ steps.dmg.outputs.dmg_name }}
+            ```
+          files: ${{ steps.dmg.outputs.dmg_path }}
+
+  update-homebrew:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download DMG and compute SHA256
+        id: sha
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          DMG_NAME="awesome-md-${VERSION}-universal.dmg"
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${DMG_NAME}"
+
+          curl -sfL "$DOWNLOAD_URL" -o "/tmp/${DMG_NAME}"
+          SHA256=$(sha256sum "/tmp/${DMG_NAME}" | awk '{ print $1 }')
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "sha256=${SHA256}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: Latentti/homebrew-awesome-md
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap-repo
+
+      - name: Update cask version and SHA256
+        run: |
+          CASK_FILE="homebrew-tap-repo/Casks/awesome-md.rb"
+          sed -i "s/version \".*\"/version \"${{ steps.sha.outputs.version }}\"/" "$CASK_FILE"
+          sed -i "s/sha256 \".*\"/sha256 \"${{ steps.sha.outputs.sha256 }}\"/" "$CASK_FILE"
+
+      - name: Commit and push
+        working-directory: homebrew-tap-repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/awesome-md.rb
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Update awesome-md to ${{ steps.sha.outputs.version }}"
+          git push
