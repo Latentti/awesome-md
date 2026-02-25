@@ -18,40 +18,57 @@ protocol.registerSchemesAsPrivileged([
 
 const windowManager = new WindowManager();
 
-app.on('ready', () => {
-  const appConfig = parseCliArgs();
+const gotLock = app.requestSingleInstanceLock();
 
-  protocol.handle('local-file', async (request) => {
-    try {
-      const url = new URL(request.url);
-      const filePath = decodeURIComponent(url.pathname);
-      return await net.fetch(`file://${filePath}`);
-    } catch {
-      return new Response('Not found', { status: 404 });
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (_event, argv) => {
+    const args = parseCliArgs(argv);
+    if (args.directory) {
+      const win = windowManager.create({
+        directory: args.directory,
+        title: args.title,
+      });
+      app.focus();
+      win.focus();
     }
   });
 
-  registerIpcHandlers(windowManager);
+  app.on('ready', () => {
+    const appConfig = parseCliArgs();
 
-  windowManager.create({
-    directory: appConfig.directory,
-    title: appConfig.title,
+    protocol.handle('local-file', async (request) => {
+      try {
+        const url = new URL(request.url);
+        const filePath = decodeURIComponent(url.pathname);
+        return await net.fetch(`file://${filePath}`);
+      } catch {
+        return new Response('Not found', { status: 404 });
+      }
+    });
+
+    registerIpcHandlers(windowManager);
+
+    windowManager.create({
+      directory: appConfig.directory,
+      title: appConfig.title,
+    });
   });
-});
 
-app.on('before-quit', () => {
-  for (const ctx of windowManager.getAll()) {
-    ctx.watcher?.close();
-  }
-});
+  app.on('before-quit', () => {
+    for (const ctx of windowManager.getAll()) {
+      ctx.watcher?.close();
+    }
+  });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
 
-app.on('activate', () => {
-  // Do NOT create a new window on activate — no default directory available.
-  // Multi-window creation will be handled by second-instance in Story 5.2.
-});
+  app.on('activate', () => {
+    // No default directory available — windows are created via CLI args or second-instance.
+  });
+}
