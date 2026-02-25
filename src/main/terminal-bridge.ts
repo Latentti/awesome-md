@@ -43,6 +43,25 @@ const getTtyForPid = async (pid: number): Promise<string | null> => {
   }
 };
 
+/** Walk up the process tree from pid to find the first ancestor with a TTY. */
+const findAncestorTty = async (pid: number): Promise<string | null> => {
+  let current = pid;
+  for (let i = 0; i < 10; i++) {
+    const tty = await getTtyForPid(current);
+    if (tty) return tty;
+    // Get parent PID
+    try {
+      const { stdout } = await execFileAsync('ps', ['-p', String(current), '-o', 'ppid=']);
+      const ppid = parseInt(stdout.trim(), 10);
+      if (isNaN(ppid) || ppid <= 1) return null;
+      current = ppid;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
 /** Activate the specific Terminal.app window/tab matching the given TTY. */
 const activateTerminalAppTab = async (tty: string): Promise<boolean> => {
   const safeTty = escapeForAppleScript(tty);
@@ -97,8 +116,8 @@ export const activateTerminal = async (
     return { activated: false };
   }
 
-  // Try to find and focus the exact tab via TTY
-  const tty = await getTtyForPid(pid);
+  // Try to find and focus the exact tab via TTY (walk up process tree if needed)
+  const tty = await findAncestorTty(pid);
   if (tty) {
     if (bundleId === 'com.apple.Terminal') {
       const found = await activateTerminalAppTab(tty);
