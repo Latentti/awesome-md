@@ -15,6 +15,7 @@ export const IPC_CHANNELS = {
   TERMINAL_GET_INFO: 'terminal:get-info',
   WINDOWS_GET_ALL: 'windows:get-all',
   WINDOWS_ACTIVATE: 'windows:activate',
+  WINDOWS_OPEN_NEW: 'windows:open-new',
   SET_CURRENT_FILE: 'app:set-current-file',
 } as const;
 

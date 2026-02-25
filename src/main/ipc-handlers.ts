@@ -169,6 +169,21 @@ export const registerIpcHandlers = (windowManager: WindowManager): void => {
     return { data: null };
   });
 
+  ipcMain.handle(IPC_CHANNELS.WINDOWS_OPEN_NEW, (_, dirPath: string): IpcResult<null> => {
+    try {
+      const resolved = path.resolve(dirPath);
+      const stat = fs.statSync(resolved);
+      if (!stat.isDirectory()) return { data: null, error: 'Not a directory' };
+
+      const dirName = path.basename(resolved);
+      const win = windowManager.create({ directory: resolved, title: dirName });
+      win.show();
+      return { data: null };
+    } catch {
+      return { data: null, error: 'Invalid path' };
+    }
+  });
+
   ipcMain.handle(IPC_CHANNELS.SET_CURRENT_FILE, (event, filePath: string | null) => {
     const ctx = windowManager.getByWebContentsId(event.sender.id);
     if (!ctx) return;

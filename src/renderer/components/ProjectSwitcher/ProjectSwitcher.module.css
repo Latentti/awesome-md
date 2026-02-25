@@ -149,6 +149,19 @@
   color: inherit;
 }
 
+.overlayDragOver {
+  outline: 2px dashed var(--info);
+  outline-offset: -8px;
+}
+
+.dropHint {
+  text-align: center;
+  color: var(--info);
+  font-size: 14px;
+  font-family: var(--font-ui);
+  padding: 24px 0;
+}
+
 .emptyState {
   text-align: center;
   color: var(--text-secondary);

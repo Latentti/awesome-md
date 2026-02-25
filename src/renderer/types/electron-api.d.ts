@@ -20,6 +20,7 @@ export interface ElectronAPI {
   getTerminalInfo(): Promise<IpcResult<TerminalInfo>>;
   getAllWindows(): Promise<IpcResult<WindowInfo[]>>;
   activateWindow(id: number): Promise<IpcResult<null>>;
+  openNewWindow(dirPath: string): Promise<IpcResult<null>>;
   setCurrentFile(filePath: string | null): Promise<void>;
 }
 

@@ -350,6 +350,12 @@ export const App = () => {
             window.electronAPI.activateWindow(id);
             setShowProjectSwitcher(false);
           }}
+          onOpenNewWindow={async (dir) => {
+            const result = await window.electronAPI.openNewWindow(dir);
+            if (!result.error) {
+              setShowProjectSwitcher(false);
+            }
+          }}
         />
       )}
     </div>

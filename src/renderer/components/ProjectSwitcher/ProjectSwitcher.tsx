@@ -15,15 +15,18 @@ const shortenDir = (dir: string): string => {
 interface ProjectSwitcherProps {
   onClose: () => void;
   onActivateWindow: (id: number) => void;
+  onOpenNewWindow: (dir: string) => void;
 }
 
-export const ProjectSwitcher = ({ onClose, onActivateWindow }: ProjectSwitcherProps) => {
+export const ProjectSwitcher = ({ onClose, onActivateWindow, onOpenNewWindow }: ProjectSwitcherProps) => {
   const [windows, setWindows] = useState<WindowInfo[]>([]);
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState(0);
   const [visible, setVisible] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dragCounterRef = useRef(0);
 
   // Fetch window list on mount
   useEffect(() => {
@@ -99,16 +102,61 @@ export const ProjectSwitcher = ({ onClose, onActivateWindow }: ProjectSwitcherPr
     }
   };
 
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current++;
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length !== 1) return;
+
+    const filePath = window.electronAPI.getPathForFile(files[0]);
+    if (!filePath) return;
+
+    onOpenNewWindow(filePath);
+  }, [onOpenNewWindow]);
+
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  const overlayClass = `${styles.overlay} ${visible ? styles.overlayVisible : ''}`;
+  const overlayClass = [
+    styles.overlay,
+    visible && styles.overlayVisible,
+    isDragOver && styles.overlayDragOver,
+  ].filter(Boolean).join(' ');
 
   return (
-    <div className={overlayClass} onKeyDown={handleKeyDown} onClick={handleBackdropClick} tabIndex={-1}>
+    <div
+      className={overlayClass}
+      onKeyDown={handleKeyDown}
+      onClick={handleBackdropClick}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      tabIndex={-1}
+    >
       <div className={styles.content}>
         <div className={styles.header}>
           <h2 className={styles.title}>Open Projects ({windows.length})</h2>
@@ -135,6 +183,9 @@ export const ProjectSwitcher = ({ onClose, onActivateWindow }: ProjectSwitcherPr
               />
             ))}
           </div>
+        )}
+        {isDragOver && (
+          <p className={styles.dropHint}>Drop folder to open new project</p>
         )}
       </div>
     </div>
