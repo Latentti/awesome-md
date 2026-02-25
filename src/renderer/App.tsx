@@ -6,6 +6,7 @@ import { MarkdownViewer } from './components/MarkdownViewer/MarkdownViewer';
 import { RefreshIndicator } from './components/RefreshIndicator/RefreshIndicator';
 import { DropZone } from './components/DropZone/DropZone';
 import { TerminalBridgeButton } from './components/TerminalBridgeButton/TerminalBridgeButton';
+import { ProjectSwitcher } from './components/ProjectSwitcher/ProjectSwitcher';
 import type { AppConfig } from './types/electron-api';
 import styles from './App.module.css';
 
@@ -17,6 +18,7 @@ export const App = () => {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showProjectSwitcher, setShowProjectSwitcher] = useState(false);
   const isResizing = useRef(false);
   const contentRef = useRef<HTMLElement>(null);
   const isAutoRefreshRef = useRef(false);
@@ -72,10 +74,20 @@ export const App = () => {
     return () => { cancelled = true; };
   }, [config?.directory]);
 
-  // Keyboard shortcuts: Cmd+T (terminal), Cmd+Plus/Minus/0 (zoom)
+  // Keyboard shortcuts: Cmd+Shift+P (project switcher), Cmd+T (terminal), Cmd+Plus/Minus/0 (zoom)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!e.metaKey && !e.ctrlKey) return;
+
+      // Cmd+Shift+P: toggle Project Switcher (only when a directory is active)
+      if (e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+        const cfg = configRef.current;
+        if (cfg?.directory) {
+          e.preventDefault();
+          setShowProjectSwitcher(prev => !prev);
+        }
+        return;
+      }
 
       // Cmd+T: activate terminal (only when a directory with terminal PID is active)
       if (e.key === 't') {
@@ -331,6 +343,15 @@ export const App = () => {
           {renderContent()}
         </div>
       </main>
+      {showProjectSwitcher && (
+        <ProjectSwitcher
+          onClose={() => setShowProjectSwitcher(false)}
+          onActivateWindow={(id) => {
+            window.electronAPI.activateWindow(id);
+            setShowProjectSwitcher(false);
+          }}
+        />
+      )}
     </div>
   );
 };
