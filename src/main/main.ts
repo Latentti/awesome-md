@@ -29,6 +29,8 @@ if (!gotLock) {
       const win = windowManager.create({
         directory: args.directory,
         title: args.title,
+        terminalPid: args.terminalPid,
+        terminalBundleId: args.terminalBundleId,
       });
       app.focus();
       win.focus();
@@ -53,6 +55,8 @@ if (!gotLock) {
     windowManager.create({
       directory: appConfig.directory,
       title: appConfig.title,
+      terminalPid: appConfig.terminalPid,
+      terminalBundleId: appConfig.terminalBundleId,
     });
   });
 
