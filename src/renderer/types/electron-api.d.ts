@@ -1,6 +1,6 @@
-import type { AppConfig, IpcResult, TreeNode } from '../../shared/types';
+import type { AppConfig, IpcResult, TerminalInfo, TreeNode } from '../../shared/types';
 
-export type { AppConfig, IpcResult, TreeNode };
+export type { AppConfig, IpcResult, TerminalInfo, TreeNode };
 
 export interface ElectronAPI {
   getConfig(): Promise<AppConfig>;
@@ -16,6 +16,8 @@ export interface ElectronAPI {
   getPathForFile(file: File): string;
   getZoomLevel(): Promise<number>;
   setZoomLevel(level: number): void;
+  activateTerminal(): Promise<IpcResult<{ activated: boolean }>>;
+  getTerminalInfo(): Promise<IpcResult<TerminalInfo>>;
 }
 
 declare global {

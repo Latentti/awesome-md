@@ -30,4 +30,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     webFrame.setZoomLevel(level);
     ipcRenderer.invoke(IPC_CHANNELS.SET_ZOOM_LEVEL, level);
   },
+  activateTerminal: () => ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_ACTIVATE),
+  getTerminalInfo: () => ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_GET_INFO),
 });

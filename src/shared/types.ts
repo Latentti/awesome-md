@@ -19,6 +19,11 @@ export interface IpcResult<T> {
   error?: string;
 }
 
+export interface TerminalInfo {
+  hasTerminal: boolean;
+  terminalApp: string;
+}
+
 export interface TreeNode {
   name: string;
   path: string;

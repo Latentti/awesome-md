@@ -11,6 +11,8 @@ export const IPC_CHANNELS = {
   SELECT_DIRECTORY: 'app:select-directory',
   GET_ZOOM_LEVEL: 'app:get-zoom-level',
   SET_ZOOM_LEVEL: 'app:set-zoom-level',
+  TERMINAL_ACTIVATE: 'terminal:activate',
+  TERMINAL_GET_INFO: 'terminal:get-info',
 } as const;
 
 export const DEFAULTS = {

@@ -2,9 +2,10 @@ import { ipcMain, shell } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { IPC_CHANNELS } from '../shared/constants';
-import type { AppConfig, IpcResult, TreeNode } from '../shared/types';
+import type { AppConfig, IpcResult, TerminalInfo, TreeNode } from '../shared/types';
 import { scanDirectory } from './directory-scanner';
 import { startFileWatcher } from './file-watcher';
+import { activateTerminal, openNewTerminal, isProcessAlive, bundleIdToAppName } from './terminal-bridge';
 import type { WindowManager } from './window-manager';
 import { loadWindowState } from './window-state';
 
@@ -118,6 +119,32 @@ export const registerIpcHandlers = (windowManager: WindowManager): void => {
     } catch (err) {
       return { data: null, error: (err as Error).message };
     }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.TERMINAL_ACTIVATE, async (event): Promise<IpcResult<{ activated: boolean }>> => {
+    const ctx = windowManager.getByWebContentsId(event.sender.id);
+    if (!ctx) return { data: null, error: 'Unknown window' };
+    try {
+      if (ctx.terminalPid && ctx.terminalBundleId) {
+        const result = await activateTerminal(ctx.terminalPid, ctx.terminalBundleId, ctx.directory);
+        return { data: result };
+      }
+      // No terminal info — open new terminal in directory
+      await openNewTerminal(ctx.directory);
+      return { data: { activated: false } };
+    } catch (err) {
+      return { data: null, error: (err as Error).message };
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.TERMINAL_GET_INFO, (event): IpcResult<TerminalInfo> => {
+    const ctx = windowManager.getByWebContentsId(event.sender.id);
+    if (!ctx) return { data: null, error: 'Unknown window' };
+
+    const hasTerminal = ctx.terminalPid !== null && isProcessAlive(ctx.terminalPid);
+    const terminalApp = ctx.terminalBundleId ? bundleIdToAppName(ctx.terminalBundleId) : '';
+
+    return { data: { hasTerminal, terminalApp } };
   });
 
   const ALLOWED_PROTOCOLS = ['http:', 'https:', 'mailto:'];
