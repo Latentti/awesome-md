@@ -189,6 +189,12 @@ export const App = () => {
     return () => { cancelled = true; };
   }, [selectedFile]);
 
+  // Report selected file to main process for Project Switcher
+  useEffect(() => {
+    if (!config?.directory) return;
+    window.electronAPI.setCurrentFile(selectedFile);
+  }, [selectedFile, config?.directory]);
+
   useEffect(() => {
     if (!selectedFile) return;
 

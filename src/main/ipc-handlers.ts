@@ -2,7 +2,7 @@ import { ipcMain, shell } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { IPC_CHANNELS } from '../shared/constants';
-import type { AppConfig, IpcResult, TerminalInfo, TreeNode } from '../shared/types';
+import type { AppConfig, IpcResult, TerminalInfo, TreeNode, WindowInfo } from '../shared/types';
 import { scanDirectory } from './directory-scanner';
 import { startFileWatcher } from './file-watcher';
 import { activateTerminal, openNewTerminal, isProcessAlive, bundleIdToAppName } from './terminal-bridge';
@@ -94,6 +94,7 @@ export const registerIpcHandlers = (windowManager: WindowManager): void => {
 
       ctx.directory = resolved;
       ctx.title = path.basename(resolved);
+      ctx.currentFile = null;
 
       const savedState = loadWindowState(resolved);
       if (savedState) {
@@ -145,6 +146,33 @@ export const registerIpcHandlers = (windowManager: WindowManager): void => {
     const terminalApp = ctx.terminalBundleId ? bundleIdToAppName(ctx.terminalBundleId) : '';
 
     return { data: { hasTerminal, terminalApp } };
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WINDOWS_GET_ALL, (event): IpcResult<WindowInfo[]> => {
+    const requestingId = event.sender.id;
+    const allContexts = windowManager.getAll();
+    const windows: WindowInfo[] = allContexts.map(ctx => ({
+      id: ctx.window.webContents.id,
+      title: ctx.title,
+      directory: ctx.directory,
+      currentFile: ctx.currentFile,
+      hasTerminal: ctx.terminalPid !== null && isProcessAlive(ctx.terminalPid),
+      isCurrent: ctx.window.webContents.id === requestingId,
+    }));
+    return { data: windows };
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WINDOWS_ACTIVATE, (_, webContentsId: number): IpcResult<null> => {
+    const ctx = windowManager.getByWebContentsId(webContentsId);
+    if (!ctx) return { data: null, error: 'Window not found' };
+    ctx.window.show();
+    return { data: null };
+  });
+
+  ipcMain.handle(IPC_CHANNELS.SET_CURRENT_FILE, (event, filePath: string | null) => {
+    const ctx = windowManager.getByWebContentsId(event.sender.id);
+    if (!ctx) return;
+    ctx.currentFile = filePath;
   });
 
   const ALLOWED_PROTOCOLS = ['http:', 'https:', 'mailto:'];

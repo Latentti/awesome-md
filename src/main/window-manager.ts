@@ -13,6 +13,7 @@ export interface WindowContext {
   zoomLevel: number;
   terminalPid: number | null;
   terminalBundleId: string | null;
+  currentFile: string | null;
 }
 
 export interface WindowArgs {
@@ -65,6 +66,7 @@ export class WindowManager {
       zoomLevel: savedState?.zoomLevel ?? 0,
       terminalPid: args.terminalPid ?? null,
       terminalBundleId: args.terminalBundleId ?? null,
+      currentFile: null,
     };
 
     const webContentsId = win.webContents.id;

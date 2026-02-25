@@ -1,6 +1,6 @@
-import type { AppConfig, IpcResult, TerminalInfo, TreeNode } from '../../shared/types';
+import type { AppConfig, IpcResult, TerminalInfo, TreeNode, WindowInfo } from '../../shared/types';
 
-export type { AppConfig, IpcResult, TerminalInfo, TreeNode };
+export type { AppConfig, IpcResult, TerminalInfo, TreeNode, WindowInfo };
 
 export interface ElectronAPI {
   getConfig(): Promise<AppConfig>;
@@ -18,6 +18,9 @@ export interface ElectronAPI {
   setZoomLevel(level: number): void;
   activateTerminal(): Promise<IpcResult<{ activated: boolean }>>;
   getTerminalInfo(): Promise<IpcResult<TerminalInfo>>;
+  getAllWindows(): Promise<IpcResult<WindowInfo[]>>;
+  activateWindow(id: number): Promise<IpcResult<null>>;
+  setCurrentFile(filePath: string | null): Promise<void>;
 }
 
 declare global {

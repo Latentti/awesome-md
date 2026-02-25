@@ -13,6 +13,9 @@ export const IPC_CHANNELS = {
   SET_ZOOM_LEVEL: 'app:set-zoom-level',
   TERMINAL_ACTIVATE: 'terminal:activate',
   TERMINAL_GET_INFO: 'terminal:get-info',
+  WINDOWS_GET_ALL: 'windows:get-all',
+  WINDOWS_ACTIVATE: 'windows:activate',
+  SET_CURRENT_FILE: 'app:set-current-file',
 } as const;
 
 export const DEFAULTS = {
